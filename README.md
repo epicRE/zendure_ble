@@ -3,21 +3,24 @@
 **Please note this is work in progress. If you have more or better information feel free to create a pull request! Thanks!**
 
 The Zendure SolarFlow ([https://eu.zendure.com/](https://eu.zendure.com/)) is a controller and microinverter that can connect up to 2 solar panels (800W total) and output up to 1200W.
+
 Manual: [https://cdn.shopify.com/s/files/1/0720/4379/0616/files/SolarFlow20230525_V8.pdf](https://cdn.shopify.com/s/files/1/0720/4379/0616/files/SolarFlow20230525_V8.pdf)
 
 #### Devices:
 
 Name  : Smart PV Hub 1200 Controller
+
 Model : ZDSPVH1200
 
 Name: Add-on Battery AB1000
+
 Battery model : 	ZDAB1000
 
 In this posting I will detail how to communicate with the Zendure SolarFlow using Bluetooth (get a bluetooth enabled device and start gathering data). (Without a local account, mobile app or cloud account) "Some" privacy is ensured.   
 
 ### DISCLAIMER (progress at own risk! I can't be liable for any damage you do to the device!)
 
-### Bluetooth Low-Energy (BLE)
+### Zendure SolarFlow and Bluetooth
 
 **WARNING**: This system includes no security. It is possible to read and write data to the system without any authentication. (It is probably safer to keep a constant connection to avoid someone else connecting to it!)
 
