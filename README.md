@@ -95,7 +95,7 @@ packData  |  | These are used with method: report  |
 | | power | INT: Current |
 | | socLevel | INT : Current battery level (%)|
 | | state | INT: A zero (0) means it is doing nothing, and a one(1) means it is charging, two (2) means it is discharging|
-| | maxTemp | INT |
+| | maxTemp | INT: The maximum temprature is calculated as follows ((maxTemp/10)-273.15) e.g. (2841/10)-273.15=10.95C. A better algorithm is ((maxTemp-2731)/10) |
 | | maxVol | INT |
 | | minVol | INT |
 | | totalVol | INT |
