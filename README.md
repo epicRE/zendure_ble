@@ -34,7 +34,7 @@ UUID_WRITE       = "0000C304-0000-1000-8000-00805F9B34FB"
 
 The following is a sequence of requests made by the Zandure Application. 
 
-### Reading settings/values from the Zendure SolarFLow
+### Data structures used by Zendure SolarFLow
 
 
 JSON | Property | Description
@@ -132,7 +132,7 @@ modules  |  | These are used with method: firmware |
 
 Key: INT=an integer number, STRING=a long string of characters, LONG=a long number
 
-#### Example communications: 
+#### Example communication of reading settings/values
 
 I have anonymised a lot of the data in here. 
 DEVICE_ID, UNIX_TIMESTAMP, DEVICE_SERIAL, BATTERY1_SN, BATTERY2_SN
@@ -261,7 +261,89 @@ More examples:
 {"method":"report","deviceId":"DEVICE_ID","properties":{"outputPackPower":111,"outputHomePower":111}}
 ```
 
-### Writing settings/values to the Zendure SolarFLow
-There is a way to write values to the Zendure SolarFlow. I will post this soon. 
+#### Example communication of writing settings
 
+I have anonymised a lot of the data in here. 
+DEVICE_ID, UNIX_TIMESTAMP
+
+
+Set output power limit to 30W:
+
+```
+{"method": "write", "timestamp": UNIX_TIMESTAMP, "messageId": "d9f644656a4346c8a459aadb8dcfd92c", "deviceId": "DEVICE_ID", "properties": {"outputLimit": 30}}
+```
+
+```
+{"method": "write_reply", "deviceId": "DEVICE_ID", "timestamp": UNIX_TIMESTAMP, "success": 1, "properties": {"outputLimit": 30}}
+```
+
+Set minimum charge level to 50%:
+
+```
+{"method": "write", "timestamp": UNIX_TIMESTAMP, "messageId": "a8037350118b40f28ba2aecc9649c305", "deviceId": "DEVICE_ID", "properties": {"minSoc": 500}}
+```
+
+```
+{"method": "write_reply", "deviceId": "DEVICE_ID", "timestamp": UNIX_TIMESTAMP, "success": 1, "properties": {"minSoc": 500}}
+```
+
+Enable automatic shutdown:
+
+```
+{"method": "write", "timestamp": UNIX_TIMESTAMP, "messageId": "30cc48981dd14a56bb2aa8512f34b39f", "deviceId": "DEVICE_ID", "properties": {"hubState": 1}}
+```
+
+```
+{"method": "write_reply", "deviceId": "DEVICE_ID", "timestamp": UNIX_TIMESTAMP, "success": 1, "properties": {"hubState": 1}}
+```
+
+Set microinverter power to 400W and other brand:
+
+```
+{"method": "write", "timestamp": UNIX_TIMESTAMP, "messageId": "b3337c1f052f4c3783e3bb3678adddba", "deviceId": "DEVICE_ID", "properties": {"inverseMaxPower": 400, "pvBrand": 0}}
+```
+
+```
+{"method": "write_reply", "deviceId": "DEVICE_ID", "timestamp": UNIX_TIMESTAMP, "success": 1, "properties": {"inverseMaxPower": 400, "pvBrand": 2}}
+```
+
+Set maxium charge level to 70%:
+
+```
+{"method": "write", "timestamp": UNIX_TIMESTAMP, "messageId": "222497e9c3764d22b2b65e15b99fdfcd", "deviceId": "DEVICE_ID", "properties": {"socSet": 700}}
+```
+
+```
+{"method": "write_reply", "deviceId": "DEVICE_ID", "timestamp": UNIX_TIMESTAMP, "success": 1, "properties": {"socSet": 700}}
+```
+
+Passthrough:
+
+```
+{"method": "write", "timestamp": UNIX_TIMESTAMP, "messageId": "fe2c5da7f4464ba7af80675e63eafbf8", "deviceId": "DEVICE_ID", "properties": {"passMode": 2}}
+```
+
+```
+{"method": "write_reply", "deviceId": "DEVICE_ID", "timestamp": UNIX_TIMESTAMP, "success": 1, "properties": {"passMode": 2}}
+```
+
+Don't reset passMode:
+
+```
+{"method": "write", "timestamp": UNIX_TIMESTAMP, "messageId": "67d9d1bc2ca946e2b4c57e47e7c3d75f", "deviceId": "DEVICE_ID", "properties": {"autoRecover": 0}}
+```
+
+```
+{"method": "write_reply", "deviceId": "DEVICE_ID", "timestamp": UNIX_TIMESTAMP, "success": 1, "properties": {"autoRecover": 0}}
+```
+
+Disable buzzer sound:
+
+```
+{"method": "write", "timestamp": UNIX_TIMESTAMP, "messageId": "c48542da7f55414d8e97fc717fd862fa", "deviceId": "DEVICE_ID", "properties": {"buzzerSwitch": 0}}
+```
+
+```
+{"method": "write_reply", "deviceId": "DEVICE_ID", "timestamp": UNIX_TIMESTAMP, "success": 1, "properties": {"buzzerSwitch": 0}}
+```
 
