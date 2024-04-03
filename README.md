@@ -40,7 +40,7 @@ The following is a sequence of requests made by the Zandure Application.
 JSON | Property | Description
 ---- | ---  | ---
 root |      |    
-| | messageId | LONG: This can be random, usually a timestamp is used 
+| | messageId | STRING: This can be random, usually a timestamp is used 
 | | method | STRING: This can be: error, report, getInfo, getInfo-rsp, read, read_reply, write, write_reply BLESPP, BLESPP_OK    
 | | success | INT: Zero(0) is False and one(1) is True, used with write_reply, read (getAll) 
 | | deviceId | STRING: Unique device id used to identify the replies when you have multiple SolarFlow devices 
@@ -91,7 +91,7 @@ properties  |  | These are used with method: report |
 JSON | Property |Description
 ---- | ---  | ---
 packData  |  | These are used with method: report  |
-| | sn | INT: Battery Serial Number (can be found on the outside)|
+| | sn | STRING: Battery Serial Number (can be found on the outside)|
 | | power | INT: Current |
 | | socLevel | INT : Current battery level (%)|
 | | state | INT: A zero (0) means it is doing nothing, and a one(1) means it is charging, two (2) means it is discharging|
@@ -121,7 +121,7 @@ Once BLESSP_OK is sent you can then start sending requests.
 
 We can now send getInfo:
 ```
-{"messageId": UNIX_TIMESTAMP,"method":"getInfo","timestamp": UNIX_TIMESTAMP}
+{"messageId": "UNIX_TIMESTAMP","method":"getInfo","timestamp": UNIX_TIMESTAMP}
 ```
 
 And get a reply getInfo-rsp: 
@@ -133,7 +133,7 @@ And get a reply getInfo-rsp:
 Next we can send a request to getAll information. (This will generate a number of notifications, so be ready to get lots of data):
 
 ```
-{"messageId":11,"deviceId":"DEVICE_ID","timestamp":"UNIX_TIMESTAMP","properties":["getAll"],"method":"read"}
+{"messageId":"11","deviceId":"DEVICE_ID","timestamp":UNIX_TIMESTAMP,"properties":["getAll"],"method":"read"}
 ```
 
 First reply to getAll:
