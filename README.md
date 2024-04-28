@@ -34,19 +34,24 @@ UUID_WRITE       = "0000C304-0000-1000-8000-00805F9B34FB"
 
 The following is a sequence of requests made by the Zandure Application. 
 
-### Reading settings/values from the Zendure SolarFLow
+### Data structures used by Zendure SolarFLow
 
 
 JSON | Property | Description
 ---- | ---  | ---
 root |      |    
-| | messageId | LONG: This can be random, usually a timestamp is used 
-| | method | STRING: This can be: error, report, getInfo, getInfo-rsp, read, read_reply, write, write_reply BLESPP, BLESPP_OK    
-| | success | INT: Zero(0) is False and one(1) is True, used with write_reply, read (getAll) 
-| | deviceId | STRING: Unique device id used to identify the replies when you have multiple SolarFlow devices 
-| | timestamp | LONG: A timestamp (the device is not connected to the internet so it has no time tracking)
+| | messageId | STRING: This can be random; Used with method: error, getInfo, getInfo-rsp, read, write, BLESPP_OK, BLEGetVersion; Device always uses 123; App uses random 128bit hex-string, 1006 (BLEGetVersion) or 1009 (BLESPP_OK)
+| | method | STRING: This can be: error, report, getInfo, getInfo-rsp, read, read_reply, write, write_reply, BLESPP, BLESPP_OK, BLEGetVersion, firmware
+| | success | INT: Zero(0) is False and one(1) is True; Used with method: read_reply (getAll), write_reply
+| | deviceId | STRING: Unique device id used to identify the replies when you have multiple SolarFlow devices; Used with method: error, report, getInfo, getInfo-rsp, read, read_reply, write, write_reply, BLESPP, firmware 
+| | timestamp | LONG: A timestamp (the device is not connected to the internet so it has no time tracking); Used with method: error, getInfo, getInfo-rsp, read, write, write_reply, firmware; Device uses seconds; App uses milliseconds
+| | deviceSn | STRING: Device serial number; Used with method: getInfo-rsp, firmware 
+| | offData | INT: Used with method: error
+| | data | unknown[]: Used with method: error
 | | properties | See properties tables 
 | | packData | See packData table 
+| | firmwares | See firmwares table 
+| | modules | See modules table 
  
 
 JSON | Property |Description
@@ -63,35 +68,45 @@ properties  |  | These are used with method: report |
 | | electricLevel | INT: Overall battery power status as a percentage (%) (e.g., If two packs then it will be ((A+B)/2), where A is the battery power from pack 1 and B is the battery power from pack 2. |
 | | wifiState | INT: If WiFi is enabled (1) or disabled (0)|
 | | buzzerSwitch | INT: This is the audible buzzer, enabled (1) or disabled (0)|
-| | socSet | INT : Maximum battery charge set by the user (%), 90% shown as 900 (value/10) |
-| | solarInputPower | INT: Input from Solar Panels (Wh) |
-| | packInputPower | INT: How much energy is discharging from the batteries (Wh) |
-| | outputPackPower | INT: The amount of energy sent to the batteries in total (Wh)|
-| | outputHomePower | INT: Output from SolarFlow going to Home(microinverter) (Wh)|
-| | outputLimit | INT: Limit set on SolarFlow on how much to send to Home(microinverter) (Wh)|
+| | socSet | INT : Maximum battery charge set by the user (%), 90% shown as 900 (value/10); App allows setting: 70%-100% |
+| | solarInputPower | INT: Input from Solar Panels (W) |
+| | solarPower1 | INT: Input from first Solar Panel (W) |
+| | solarPower1Cycle | INT |
+| | solarPower2 | INT: Input from second Solar Panel (W) |
+| | solarPower2Cycle | INT |
+| | packInputPower | INT: How much power is discharging from the batteries (W) |
+| | packInputPowerCylce | INT |
+| | outputPackPower | INT: The amount of power sent to the batteries in total (W)|
+| | outputPackPowerCycle | INT |
+| | outputHomePower | INT: Output from SolarFlow going to Home(microinverter) (W)|
+| | outputHomePowerCycle | INT |
+| | outputLimit | INT: Limit set on SolarFlow on how much to send to Home(microinverter) (W); App allows setting: 0, 30, 60, 90, 100-1200 |
 | | inputLimit | INT |
 | | remainOutTime | INT: How much time is left until the batteries discharge to 0% at the current rate of discharge. (59940 seems to be a default value when not discharging) |
 | | remainInputTime | INT: (59940 seems to be a default status)  |
 | | packState | INT : Status of the batteries. If zero(0) is not doing anything, one(1) is charging batteries, two(2) is discharging batteries |
-| | hubState | INT |
+| | hubState | INT : If automatic shutdown is enabled (1) or disabled (0) |
 | | masterSoftVersion | INT: Software version| 
 | | masterhaerVersion | INT |
 | | inputMode | INT |
 | | blueOta | INT |
-| | pvBrand | INT |
-| | pass | INT |
-| | minSoc | INT (value/10): Minimum charge level that the batteries will go to. (They will discharge up to this amount) This is used to maintain the batteries in good health. |
-| | inverseMaxPower | INT: Maximum power that the microinverter supports |
+| | pvBrand | INT : Brand of microinverter, Other (0), Hoymiles (1), Enphase (2), APsystems (3), Anker (4), Deye (5), BossWerk (6), Tsun (7) |
+| | pass | INT : If the battery is bypassed (1) or not (0) |
+| | passMode | INT : Control mode for `pass`, Automatic (0), Always Off (1), Always On (2) |
+| | autoRecover | INT : If `passMode` gets reset to Automatic after a day (1) or not (0) |
+| | minSoc | INT (value/10): Minimum charge level that the batteries will go to. (They will discharge up to this amount) This is used to maintain the batteries in good health. App allows setting: 0%-50% |
+| | inverseMaxPower | INT: Maximum power that the microinverter supports; App allows setting: 100, 200, 300, ..., 1200 |
 | | autoModel | INT |
 | | gridPower | INT |
 | | smartMode | INT |
 | | smartPower | INT |
+| | heatState | INT |
  
 
 JSON | Property |Description
 ---- | ---  | ---
 packData  |  | These are used with method: report  |
-| | sn | INT: Battery Serial Number (can be found on the outside)|
+| | sn | STRING: Battery Serial Number (can be found on the outside)|
 | | power | INT: Current |
 | | socLevel | INT : Current battery level (%)|
 | | state | INT: A zero (0) means it is doing nothing, and a one(1) means it is charging, two (2) means it is discharging|
@@ -101,9 +116,23 @@ packData  |  | These are used with method: report  |
 | | totalVol | INT |
 | | softVersion | INT : Software version|
 
+
+JSON | Property |Description
+---- | ---  | ---
+firmwares  |  | These are used with method: getInfo-rsp |
+| | type | STRING: Type of device, e.g. MASTER, BMS, BMS_AB2000
+| | version | INT: Software version or -1
+
+
+JSON | Property |Description
+---- | ---  | ---
+modules  |  | These are used with method: firmware |
+| | module | STRING: Type of device, e.g. MASTER, BMS, BMS_AB2000
+| | version | INT: Software version or -1
+
 Key: INT=an integer number, STRING=a long string of characters, LONG=a long number
 
-#### Example communications: 
+#### Example communication of reading settings/values
 
 I have anonymised a lot of the data in here. 
 DEVICE_ID, UNIX_TIMESTAMP, DEVICE_SERIAL, BATTERY1_SN, BATTERY2_SN
@@ -121,7 +150,7 @@ Once BLESSP_OK is sent you can then start sending requests.
 
 We can now send getInfo:
 ```
-{"messageId": UNIX_TIMESTAMP,"method":"getInfo","timestamp": UNIX_TIMESTAMP}
+{"messageId": "UNIX_TIMESTAMP","method":"getInfo","timestamp": UNIX_TIMESTAMP}
 ```
 
 And get a reply getInfo-rsp: 
@@ -133,7 +162,7 @@ And get a reply getInfo-rsp:
 Next we can send a request to getAll information. (This will generate a number of notifications, so be ready to get lots of data):
 
 ```
-{"messageId":11,"deviceId":"DEVICE_ID","timestamp":"UNIX_TIMESTAMP","properties":["getAll"],"method":"read"}
+{"messageId":"11","deviceId":"DEVICE_ID","timestamp":UNIX_TIMESTAMP,"properties":["getAll"],"method":"read"}
 ```
 
 First reply to getAll:
@@ -232,7 +261,89 @@ More examples:
 {"method":"report","deviceId":"DEVICE_ID","properties":{"outputPackPower":111,"outputHomePower":111}}
 ```
 
-### Writing settings/values to the Zendure SolarFLow
-There is a way to write values to the Zendure SolarFlow. I will post this soon. 
+#### Example communication of writing settings
 
+I have anonymised a lot of the data in here. 
+DEVICE_ID, UNIX_TIMESTAMP
+
+
+Set output power limit to 30W:
+
+```
+{"method": "write", "timestamp": UNIX_TIMESTAMP, "messageId": "d9f644656a4346c8a459aadb8dcfd92c", "deviceId": "DEVICE_ID", "properties": {"outputLimit": 30}}
+```
+
+```
+{"method": "write_reply", "deviceId": "DEVICE_ID", "timestamp": UNIX_TIMESTAMP, "success": 1, "properties": {"outputLimit": 30}}
+```
+
+Set minimum charge level to 50%:
+
+```
+{"method": "write", "timestamp": UNIX_TIMESTAMP, "messageId": "a8037350118b40f28ba2aecc9649c305", "deviceId": "DEVICE_ID", "properties": {"minSoc": 500}}
+```
+
+```
+{"method": "write_reply", "deviceId": "DEVICE_ID", "timestamp": UNIX_TIMESTAMP, "success": 1, "properties": {"minSoc": 500}}
+```
+
+Enable automatic shutdown:
+
+```
+{"method": "write", "timestamp": UNIX_TIMESTAMP, "messageId": "30cc48981dd14a56bb2aa8512f34b39f", "deviceId": "DEVICE_ID", "properties": {"hubState": 1}}
+```
+
+```
+{"method": "write_reply", "deviceId": "DEVICE_ID", "timestamp": UNIX_TIMESTAMP, "success": 1, "properties": {"hubState": 1}}
+```
+
+Set microinverter power to 400W and other brand:
+
+```
+{"method": "write", "timestamp": UNIX_TIMESTAMP, "messageId": "b3337c1f052f4c3783e3bb3678adddba", "deviceId": "DEVICE_ID", "properties": {"inverseMaxPower": 400, "pvBrand": 0}}
+```
+
+```
+{"method": "write_reply", "deviceId": "DEVICE_ID", "timestamp": UNIX_TIMESTAMP, "success": 1, "properties": {"inverseMaxPower": 400, "pvBrand": 2}}
+```
+
+Set maxium charge level to 70%:
+
+```
+{"method": "write", "timestamp": UNIX_TIMESTAMP, "messageId": "222497e9c3764d22b2b65e15b99fdfcd", "deviceId": "DEVICE_ID", "properties": {"socSet": 700}}
+```
+
+```
+{"method": "write_reply", "deviceId": "DEVICE_ID", "timestamp": UNIX_TIMESTAMP, "success": 1, "properties": {"socSet": 700}}
+```
+
+Passthrough:
+
+```
+{"method": "write", "timestamp": UNIX_TIMESTAMP, "messageId": "fe2c5da7f4464ba7af80675e63eafbf8", "deviceId": "DEVICE_ID", "properties": {"passMode": 2}}
+```
+
+```
+{"method": "write_reply", "deviceId": "DEVICE_ID", "timestamp": UNIX_TIMESTAMP, "success": 1, "properties": {"passMode": 2}}
+```
+
+Don't reset passMode:
+
+```
+{"method": "write", "timestamp": UNIX_TIMESTAMP, "messageId": "67d9d1bc2ca946e2b4c57e47e7c3d75f", "deviceId": "DEVICE_ID", "properties": {"autoRecover": 0}}
+```
+
+```
+{"method": "write_reply", "deviceId": "DEVICE_ID", "timestamp": UNIX_TIMESTAMP, "success": 1, "properties": {"autoRecover": 0}}
+```
+
+Disable buzzer sound:
+
+```
+{"method": "write", "timestamp": UNIX_TIMESTAMP, "messageId": "c48542da7f55414d8e97fc717fd862fa", "deviceId": "DEVICE_ID", "properties": {"buzzerSwitch": 0}}
+```
+
+```
+{"method": "write_reply", "deviceId": "DEVICE_ID", "timestamp": UNIX_TIMESTAMP, "success": 1, "properties": {"buzzerSwitch": 0}}
+```
 
