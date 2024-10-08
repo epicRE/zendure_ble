@@ -40,18 +40,24 @@ The following is a sequence of requests made by the Zandure Application.
 JSON | Property | Description
 ---- | ---  | ---
 root |      |    
-| | messageId | STRING: This can be random; Used with method: error, getInfo, getInfo-rsp, read, write, BLESPP_OK, BLEGetVersion; Device always uses 123; App uses random 128bit hex-string, 1006 (BLEGetVersion) or 1009 (BLESPP_OK)
-| | method | STRING: This can be: error, report, getInfo, getInfo-rsp, read, read_reply, write, write_reply, BLESPP, BLESPP_OK, BLEGetVersion, firmware
+| | messageId | STRING: This can be random; Used with method: error, getInfo, getInfo-rsp, read, write, BLESPP_OK, BLEGetVersion, otareq, otareq-rsp; Device always uses 123; App uses random 128bit hex-string, 1006 (BLEGetVersion) or 1009 (BLESPP_OK)
+| | method | STRING: This can be: error, report, getInfo, getInfo-rsp, read, read_reply, write, write_reply, BLESPP, BLESPP_OK, BLEGetVersion, firmware, otareq, otareq-rsp
 | | success | INT: Zero(0) is False and one(1) is True; Used with method: read_reply (getAll), write_reply
-| | deviceId | STRING: Unique device id used to identify the replies when you have multiple SolarFlow devices; Used with method: error, report, getInfo, getInfo-rsp, read, read_reply, write, write_reply, BLESPP, firmware 
-| | timestamp | LONG: A timestamp (the device is not connected to the internet so it has no time tracking); Used with method: error, getInfo, getInfo-rsp, read, write, write_reply, firmware; Device uses seconds; App uses milliseconds
+| | deviceId | STRING: Unique device id used to identify the replies when you have multiple SolarFlow devices; Used with method: error, report, getInfo, getInfo-rsp, read, read_reply, write, write_reply, BLESPP, firmware, otareq, otareq-rsp
+| | timestamp | LONG: A timestamp (the device is not connected to the internet so it has no time tracking); Used with method: error, getInfo, getInfo-rsp, read, write, write_reply, firmware, otareq, otareq-rsp; Device uses seconds; App uses milliseconds
 | | deviceSn | STRING: Device serial number; Used with method: getInfo-rsp, firmware 
 | | offData | INT: Used with method: error
 | | data | unknown[]: Used with method: error
+| | result | INT: Used with method: otareq-rsp
+| | reason | INT: Used with method: otareq-rsp
+| | packetCount | INT: Used with method: otareq-rsp
+| | payloadSize | INT: Used with method: otareq-rsp
+| | fileRange | INT: Used with method: otareq-rsp
 | | properties | See properties tables 
 | | packData | See packData table 
 | | firmwares | See firmwares table 
 | | modules | See modules table 
+| | firmware | See firmware table 
  
 
 JSON | Property |Description
@@ -115,6 +121,7 @@ packData  |  | These are used with method: report  |
 | | minVol | INT |
 | | totalVol | INT |
 | | softVersion | INT : Software version|
+| | soh | INT : Battery health? |
 
 
 JSON | Property |Description
@@ -129,6 +136,14 @@ JSON | Property |Description
 modules  |  | These are used with method: firmware |
 | | module | STRING: Type of device, e.g. MASTER, BMS, BMS_AB2000
 | | version | INT: Software version or -1
+
+JSON | Property |Description
+---- | ---  | ---
+firmware  |  | These are used with method: otareq |
+| | CRC16 | INT: Checksum of payload ([CRC-Type](https://crccalc.com/?method=CRC-16/MODBUS); high and low byte of result swapped)
+| | size | INT: Payload size (bytes)
+| | type | STRING: Type of device, e.g. MASTER, BMS_AB2000
+| | version | INT: Software version
 
 Key: INT=an integer number, STRING=a long string of characters, LONG=a long number
 
@@ -347,3 +362,82 @@ Disable buzzer sound:
 {"method": "write_reply", "deviceId": "DEVICE_ID", "timestamp": UNIX_TIMESTAMP, "success": 1, "properties": {"buzzerSwitch": 0}}
 ```
 
+#### Example communication of a firmware update
+
+I have anonymised a lot of the data in here. 
+DEVICE_ID, UNIX_TIMESTAMP
+
+Start the update:
+
+```
+{"firmware": {"CRC16": 61491, "size": 76260, "type": "BMS_AB2000", "version": 4113}, "deviceId": "DEVICE_ID", "messageId": "883e4ea9bf0b45a09906d9e573d3160e", "method": "otareq", "timestamp": UNIX_TIMESTAMP}
+```
+
+The device replies:
+
+```
+{"method": "otareq-rsp", "timestamp": UNIX_TIMESTAMP, "messageId": "123", "deviceId": "DEVICE_ID", "result": 1, "reason": 0, "packetCount": 15, "payloadSize": 128, "fileRange": 0}
+```
+
+Next send a block of 16 packets (`packetCount + 1`?) with 5 byte header and 128 byte of the payload (payloadSize):
+
+```
+Header        | Payload
+55:2f:00:f0:80:e8:46:...
+55:2f:00:f1:80:d8:81:...
+55:2f:00:f2:80:9d:a1:...
+...
+55:2f:00:ff:80:63:5c:...
+```
+
+Header-Format: 55:2f:XX:YZ:NN  
+XX represents the block number, starting with 0 and counting up.  
+Y represents the number of the last packet of the block.  
+Z represents the number of the packet, starting with 0 and counting up.  
+NN represents the payload length.  
+
+The device replies with:
+
+```
+55:24:00:00:05:20:00:00:08:00
+```
+
+Format: 55:24:XX:00:05:20:00:0M:MM:MM  
+XX represents the block number, starting with 0 and counting up.  
+MMMMM represents the total received number of bytes. In the above example this is 128 × 16 = 2048 = 0x800  
+
+Then send the next block:
+
+```
+Header        | Payload
+55:2f:01:f0:80:56:52:...
+55:2f:01:f1:80:04:d0:...
+55:2f:01:f2:80:08:40:...
+...
+```
+
+And wait for the device reply:
+
+```
+55:24:01:00:05:20:00:00:10:00
+```
+
+The last data block may contain less than 16 packets and the last packet may contain a smaller payload.
+
+After the reply for the last block the device sends the following packets:
+
+```
+55:25:25:00:01:01
+55:26:00:00:02:03:00
+55:26:00:00:02:03:02
+...
+55:26:00:00:02:03:60
+55:26:00:00:02:01:64
+55:25:00:00:01:03
+```
+
+Format: 55:25:XX:00:01:01  
+XX represents the number of the last block.  
+
+Format: 55:26:00:00:02:03:VV  
+VV represents the progress 0 to 100.  
